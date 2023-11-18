@@ -1,8 +1,9 @@
 import query from './Query'
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef,useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Comical from 'comicaljs';
 import Draggable from 'react-draggable';
 
 function ComicCreator() {
@@ -16,6 +17,25 @@ function ComicCreator() {
   const pdfContainerRef = useRef(null);
   const[downloaded,setDownloaded] = useState();
   const [speechBubblePositions, setSpeechBubblePositions] = useState(Array(10).fill({ top: 0, left: 0 }));
+
+  useEffect(() => {
+    // Create parent and child elements
+    const pdfContainer = pdfContainerRef.current;
+    const parent = pdfContainer.parentElement;
+    const child = pdfContainer.querySelector('img');
+
+    // Set bubble specifications for the child element
+    Comical?.Bubble.setBubbleSpec(child, Comical.Bubble.getDefaultBubbleSpec(child, 'speech'));
+
+    // Start editing mode
+    Comical?.startEditing([parent]);
+
+    // Cleanup on component unmount
+    return () => {
+      // Stop editing mode
+      Comical?.stopEditing();
+    };
+  }, []);
 
   const handleShareClick = async () => {
     if(downloaded)
@@ -142,7 +162,7 @@ const handleWhatsAppShare = () => {
         <button onClick={generateComic} className="bg-green-500 hover:bg-green-700 text-white ml-10 p-2 rounded-md cursor-pointer">
           Generate Comic
         </button>
-        <button onClick={handleShareClick} disabled={`${comicImageUrls.length}>0`} className="bg-blue-500 hover:bg-blue-700 text-white ml-7 p-2 rounded-md cursor-pointer mt-4">
+        <button onClick={handleShareClick} className="bg-blue-500 hover:bg-blue-700 text-white ml-7 p-2 rounded-md cursor-pointer mt-4">
           Share Comic Strip
         </button>
         
@@ -163,7 +183,7 @@ const handleWhatsAppShare = () => {
 
         </div>
         )}
-      <div id='pdf-container'>
+      <div id='pdf-container' ref={pdfContainerRef}>
         {comicImageUrls.length > 0 && (
           <div className="flex flex-col gap-4 space-x-2">
             {comicImageUrls.map((imageUrl, index) =>(
@@ -173,12 +193,16 @@ const handleWhatsAppShare = () => {
                defaultPosition={{ x: speechBubblePositions[index].left, y: speechBubblePositions[index].top }}
                onStop={(e, data) => handleSpeechBubbleDragStop(e, data, index)}
              >
-               <div className="absolute p-2 bg-white border border-gray-300 rounded-md cloud-style" style={{ cursor: 'move' }}>
+               {/* <div className="absolute p-2 bg-white border border-gray-300 rounded-md cloud-style" style={{ cursor: 'move' }}>
                  <span>{speechInput[index]}</span>
+               </div> */}
+                <div className="w-40 h-25 flex items-center justify-center text-center text-5xl bg-yellow-200 border-2 border-black relative bubble" style={{ cursor: 'move' }}>
+                 {speechInput[index]}
+                 <div className='absolute w-40 h-full bottom-[-51%] border-2 border-black border-solid border-0.5vmin rounded-full left-10 shadow-[0.5vmin 0 0 2vmin -0.5vmin #ffd, 2vmin -0.5vmin 0 0.5vmin] clip-path-[polygon(0% 49%, 150% 48%, 150% 100%, 0% 100%)]'></div>
                </div>
              </Draggable> )}
              {/* End Speech bubble */}
-             <img src={imageUrl} className="w-1/2 h-auto" style={{ zIndex: -1 }} />
+             <img src={imageUrl} className="w-1/2 h-auto"/>
            </div>
           ))}
         </div>
