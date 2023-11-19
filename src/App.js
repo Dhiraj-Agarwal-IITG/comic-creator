@@ -61,6 +61,7 @@ function ComicCreator() {
   };
 
   const generateComic = async () => {
+    toast.success("Creation started");
     try {
       setLoading(true);
       const imageUrls = [...comicImageUrls]; // Copy the existing image URLs
